@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Marcel Controller</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #c1f7d5, #a7d4f5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      background: linear-gradient(to right, #a7d4f5, #c1f7d5);
+      border-radius: 25px;
+      padding: 40px;
+      display: flex;
+      align-items: center;
+      gap: 40px;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 750px;
+      width: 90%;
+    }
+
+    .logo-block {
+      text-align: center;
+    }
+
+    .logo-block img {
+      width: 150px;
+    }
+
+    .logo-block .label {
+      margin-top: 10px;
+      font-family: Impact, sans-serif;
+      font-size: 22px;
+      font-style: italic;
+    }
+
+    .content-block {
+      text-align: center;
+    }
+
+    .content-block h1 {
+      font-size: 26px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .content-block p {
+      margin: 10px 0 20px;
+      font-size: 18px;
+    }
+
+    .btn {
+      background-color: #004b4f;
+      color: white;
+      font-weight: bold;
+      border: none;
+      border-radius: 40px;
+      padding: 12px 24px;
+      font-size: 16px;
+      margin: 10px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .btn:hover {
+      background-color: #026d73;
+    }
+
+    /* Portrait - Mobile */
+    @media (max-width: 600px) and (orientation: portrait) {
+      .container {
+        flex-direction: column;
+        padding: 30px 20px;
+      }
+
+      .logo-block img {
+        width: 120px;
+      }
+
+      .content-block h1 {
+        font-size: 22px;
+      }
+
+      .btn {
+        width: 100%;
+        max-width: 250px;
+      }
+    }
+
+    /* Paysage - Mobile */
+    @media (max-width: 900px) and (orientation: landscape) {
+      .container {
+        flex-direction: row;
+        gap: 20px;
+      }
+
+      .logo-block img {
+        width: 130px;
+      }
+
+      .btn {
+        padding: 10px 20px;
+        font-size: 15px;
+      }
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo-block">
+      <img src="https://img.icons8.com/ios-filled/150/000000/truck.png" alt="truck" />
+      <div class="label">MARCEL CONTROLLER</div>
+    </div>
+
+    <div class="content-block">
+      <h1>HELLO<br>CONNECTEZ VOUS<br>A VOTRE ROBOT!!!</h1>
+      <p>Connectez vous ici</p>
+      <button class="btn" onclick="window.location.href='controller.html'">CONNECT</button>
+      <!-- <button class="btn" onclick="window.location.href='bluetooth.html'">BLUETOOTH</> -->
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Contrôle Robot</title>
+  <script src="https://cdn.jsdelivr.net/npm/nipplejs@0.9.0/dist/nipplejs.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #c1f7d5, #a7d4f5);
+    }
+
+    header {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      padding: 10px 20px;
+      border-bottom-left-radius: 20px;
+      border-bottom-right-radius: 20px;
+    }
+
+    .battery {
+      margin-right: 10px;
+      font-size: 19px;
+    }
+
+    .disconnect-btn {
+      background: #000;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-size: 19px;
+      cursor: pointer;
+    }
+
+    .draw {
+      background: #000;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-size: 19px;
+      cursor: pointer;
+    }
+
+    .container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: calc(100vh - 60px);
+      padding: 10px;
+      margin-top: 5px;
+    }
+
+    .bloc {
+      background: white;
+      padding: 20px;
+      border-radius: 20px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+      display: flex;
+      width: 100%;
+      max-width: 1200px;
+      height: 100%;
+      flex-direction: row;
+      justify-content: space-around;
+      align-items: center;
+    }
+
+    .left-controls .directions {
+      display: grid;
+      grid-template-columns: repeat(3, 60px);
+      grid-template-rows: repeat(3, 60px);
+      gap: 10px;
+    }
+
+    .directions button {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background-color: #000;
+      color: white;
+      font-size: 22px;
+      border: none;
+      cursor: pointer;
+    }
+
+    .directions button:empty {
+      background: none;
+      cursor: default;
+    }
+
+    .center-buttons {
+      display: grid;
+      grid-template-columns: 60px 60px;
+      grid-template-rows: 60px 60px;
+      gap: 20px;
+    }
+
+    .center-buttons button {
+      background: #222;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      border: none;
+      color: white;
+      box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+      cursor: pointer;
+    }
+
+    .joystick-wrapper {
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      border: 16px solid #000;
+      background: white;
+      position: relative;
+    }
+
+    #joystick-zone {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+    }
+
+    .mode-switch {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 60px;
+      height: 30px;
+      background: #000;
+      border-radius: 30px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 24px;
+      height: 24px;
+      background: red;
+      border-radius: 50%;
+      transition: transform 0.3s ease;
+    }
+
+    input:checked + .slider {
+      transform: translateX(30px);
+      background: limegreen;
+    }
+
+    @media (orientation: portrait) {
+      .container {
+        flex-direction: column;
+        height: auto;
+        padding: 10px;
+      }
+
+      .bloc {
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: center;
+        width: 90%;
+        height: 95vh;
+      }
+
+      .left-controls, .center-buttons, .right-joystick, .mode-switch {
+        margin: 10px 0;
+      }
+
+      .mode-switch {
+        flex-direction: row;
+      }
+    }
+
+    @media (orientation: landscape), (min-width: 1025px) {
+      .bloc {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .container {
+        flex-direction: row !important;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .bloc {
+        flex-direction: row !important;
+        align-items: center;
+        justify-content: center;
+        gap: 20px; /* Réduit l’espace entre les éléments */
+        padding: 20px;
+      }
+
+      .left-controls .directions {
+        margin: 0 70px 0 0;
+      }
+
+      .right-joystick {
+        margin: 0 0 0 70px;
+      }
+
+      .center-buttons {
+        margin: 30px 0 10px 0;
+      }
+
+      .mode-switch {
+        margin-bottom: 10px;
+      }
+
+      .left-controls {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .middle-zone {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: center;
+        gap: 30px;
+      }
+
+      .right-joystick {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a href=Draw.html><button class="draw">D</button></a>
+    <div class="battery" id="batteryText">🔋 --%</div>
+    <button class="disconnect-btn">⎋</button>
+  </header>
+
+  <div class="container">
+    <div class="bloc">
+      <div class="left-controls">
+        <div class="directions">
+          <div></div>
+          <button onclick="envoyerCommande('F')">↑</button>
+          <div></div>
+          <button onclick="envoyerCommande('L')">←</button>
+          <button onclick="envoyerCommande('S')">■</button>
+          <button onclick="envoyerCommande('R')">→</button>
+          <div></div>
+          <button onclick="envoyerCommande('B')">↓</button>
+          <div></div>
+        </div>
+      </div>
+
+      <div class="middle-zone">
+        <div class="mode-switch">
+          <label class="switch">
+            <input type="checkbox" id="modeToggle">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="center-buttons">
+          <button>1</button>
+          <button>2</button>
+          <button>3</button>
+          <button>4</button>
+          </div>
+      </div>
+
+      <div class="right-joystick">
+        <div class="joystick-wrapper">
+          <div id="joystick-zone"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const toggle = document.getElementById("modeToggle");
+
+    toggle.addEventListener("change", () => {
+      const mode = toggle.checked ? "auto" : "manuel";
+      fetch(`/mode?type=${mode}`)
+        .then(res => res.text())
+        .then(msg => console.log("Changement mode :", msg))
+        .catch(err => console.error("Erreur de mode :", err));
+    });
+
+
+    document.querySelector(".disconnect-btn").addEventListener("click", () => {
+      localStorage.removeItem("mode");
+      window.location.href = "index.html";
+    });
+      function envoyerCommande(cmd) {
+  fetch(`/commande?cmd=${cmd}`)
+    .then(res => res.text())
+    .then(msg => console.log("Réponse ESP32 :", msg))
+          .catch(err => console.error("Erreur requête :", err));
+
+    }
+
+    const joystick = nipplejs.create({
+      zone: document.getElementById('joystick-zone'),
+      mode: 'static',
+      position: { left: '50%', top: '50%' },
+      color: '#004b4f',
+      size: 120
+    });
+
+    joystick.on('move', (evt, data) => {
+      const { angle, distance } = data;
+      if (angle && distance > 10) {
+        const deg = angle.degree;
+        let direction;
+
+        if (deg > 45 && deg <= 135) direction = "F";        // Haut
+        else if (deg > 135 && deg <= 225) direction = "L";  // Gauche
+        else if (deg > 225 && deg <= 315) direction = "B";  // Bas
+        else direction = "R";                               // Droite
+
+        envoyerCommande(direction);
+      }
+    });
+
+
+    joystick.on('end', () => {
+      envoyerCommande('S');
+    });
+    function majBatterie() {
+      fetch("/battery")
+        .then(res => res.text())
+        .then(pourcentage => {
+          document.getElementById("batteryText").innerText = `🔋 ${pourcentage}%`;
+        })
+        .catch(() => {
+          document.getElementById("batteryText").innerText = "🔋 --%";
+        });
+    }
+
+    // Mise à jour toutes les 5 secondes
+    setInterval(majBatterie, 5000);
+    majBatterie(); // premier appel
+
+  </script>
+</body>
+</html>

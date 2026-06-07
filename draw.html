@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Marcel Controller - Trajet</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #c1f7d5, #a7d4f5);
+      display: flex;
+      height: 100vh;
+    }
+
+    .sidebar {
+      width: 380px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 10px;
+    }
+
+    .logo-box {
+      background: linear-gradient(to right, #a7d4f5, #c1f7d5);
+      border-radius: 25px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-box img {
+      width: 140px;
+    }
+
+    .logo-box span {
+      font-weight: bold;
+      font-style: italic;
+      font-size: 22px;
+    }
+
+    .side-buttons {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 20px;
+      gap: 20px;
+    }
+
+    .side-buttons input {
+      width: 50px;
+      height: 35px;
+      border-radius: 25px;
+      background: #000;
+      color: white;
+      border: none;
+      text-align: center;
+    }
+
+    .side-buttons button {
+      font-size: 32px;
+      background: none;
+      border: none;
+      cursor: pointer;
+
+      background: #222;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: none;
+      color: white;
+      box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+      cursor: pointer;
+    }
+
+    .main {
+      flex: 1;
+      position: relative;
+      margin: 20px;
+      background: white;
+      border-radius: 25px;
+      overflow: hidden;
+      margin-top: 70px;
+    }
+
+    .topbar {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      display: flex;
+      gap: 20px;
+      font-size: 24px;
+      z-index: 3;
+    }
+
+    .topbar button {
+      background: #000;
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .flag {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      pointer-events: auto;
+      z-index: 2;
+      user-select: none;
+      cursor: move;
+    }
+    /* Portrait mobile */
+    @media screen and (max-width: 768px) and (orientation: portrait) {
+      body {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        flex-direction: row;
+        flex-wrap: wrap;
+        width: 100%;
+        padding: 10px;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      .logo-box {
+        flex-direction: row;
+        gap: 10px;
+        padding: 10px;
+      }
+
+      .logo-box img {
+        width: 80px;
+      }
+
+      .logo-box span {
+        font-size: 16px;
+      }
+
+      .side-buttons {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin: 0;
+        gap: 10px;
+      }
+
+      .side-buttons input {
+        width: 60px;
+        height: 30px;
+        font-size: 14px;
+      }
+
+      .side-buttons button {
+        font-size: 24px;
+      }
+
+      .main {
+        margin: 10px;
+        border-radius: 15px;
+      }
+
+      .topbar {
+        top: 10px;
+        right: 10px;
+        font-size: 20px;
+        gap: 10px;
+      }
+    }
+
+    /* Landscape mobile */
+    @media screen and (max-width: 1024px) and (orientation: landscape) {
+      .sidebar {
+        width: 220px;
+        padding: 10px 5px;
+      }
+
+      .logo-box img {
+        width: 100px;
+      }
+
+      .logo-box span {
+        font-size: 18px;
+      }
+
+      .side-buttons input {
+        width: 60px;
+        height: 30px;
+      }
+
+      .side-buttons button {
+        font-size: 28px;
+      }
+
+      .main {
+        margin: 10px;
+        border-radius: 20px;
+      }
+
+      .topbar {
+        font-size: 20px;
+        gap: 15px;
+      }
+    }
+
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <div class="logo-box">
+      <img src="https://img.icons8.com/ios-filled/100/000000/truck.png" alt="Truck">
+      <span>MARCEL CONTROLLER</span>
+    </div>
+
+    <div class="side-buttons">
+      <input id="sideInput" placeholder="__m">
+      <button id="penBtn" title="Crayon">&#9998;</button>
+      <button id="eraserBtn" title="Gomme">&#128396;</button>
+      <button id="sendBtn" title="Envoyer">&#8635;</button>
+      <button id="backBtn" title="Retour">&#x21A9;</button>
+    </div>
+  </div>
+  <div class="topbar">
+    <div class="battery" id="batteryText">🔋 --%</div>
+    <button onclick="disconnect()">⎋</button>
+  </div>
+
+  <div class="main">
+    <canvas id="drawCanvas"></canvas>
+    <img id="flag" class="flag" src="flag.png" style="left:50px; top:50px">
+
+  </div>
+
+  <script>
+    const canvas = document.getElementById("drawCanvas");
+    const ctx = canvas.getContext("2d");
+    const flag = document.getElementById("flag");
+    let drawing = false;
+    let erasing = false;
+    let points = [];
+
+    function resizeCanvas() {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+    }
+
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+
+    canvas.addEventListener("mousedown", (e) => {
+      if (e.target !== canvas) return;
+      drawing = true;
+      const flagX = parseInt(flag.style.left) + 15;
+      const flagY = parseInt(flag.style.top) + 15;
+      ctx.beginPath();
+      ctx.moveTo(flagX, flagY);
+      points.push([{ x: flagX, y: flagY }]);
+      draw(e);
+    });
+
+    canvas.addEventListener("mouseup", () => {
+      drawing = false;
+      ctx.beginPath();
+    });
+
+    canvas.addEventListener("mousemove", draw);
+    // GESTION TACTILE
+    canvas.addEventListener("touchstart", (e) => {
+      if (e.target !== canvas) return;
+      e.preventDefault();
+      drawing = true;
+      const touch = e.touches[0];
+      const rect = canvas.getBoundingClientRect();
+      const x = touch.clientX - rect.left;
+      const y = touch.clientY - rect.top;
+      const flagX = parseInt(flag.style.left) + 15;
+      const flagY = parseInt(flag.style.top) + 15;
+      ctx.beginPath();
+      ctx.moveTo(flagX, flagY);
+      points.push([{ x: flagX, y: flagY }]);
+      drawTouch(x, y);
+    });
+
+    canvas.addEventListener("touchmove", (e) => {
+      if (!drawing) return;
+      e.preventDefault();
+      const touch = e.touches[0];
+      const rect = canvas.getBoundingClientRect();
+      const x = touch.clientX - rect.left;
+      const y = touch.clientY - rect.top;
+      drawTouch(x, y);
+    });
+
+    canvas.addEventListener("touchend", () => {
+      drawing = false;
+      ctx.beginPath();
+    });
+
+    function drawTouch(x, y) {
+      const p = points[points.length - 1];
+      p.push({ x, y });
+      ctx.lineJoin = "round";
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = erasing ? "white" : "black";
+      ctx.lineTo(x, y);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+    }
+    flag.addEventListener("touchstart", (e) => {
+      isDragging = true;
+      e.preventDefault();
+    });
+
+    document.addEventListener("touchmove", (e) => {
+      if (!isDragging) return;
+      const rect = canvas.getBoundingClientRect();
+      const touch = e.touches[0];
+      let x = touch.clientX - rect.left - 15;
+      let y = touch.clientY - rect.top - 15;
+      x = Math.max(0, Math.min(canvas.offsetWidth - 30, x));
+      y = Math.max(0, Math.min(canvas.offsetHeight - 30, y));
+      flag.style.left = `${x}px`;
+      flag.style.top = `${y}px`;
+    });
+
+    document.addEventListener("touchend", () => {
+      isDragging = false;
+    });
+
+
+    function draw(e) {
+      if (!drawing) return;
+      const x = e.offsetX;
+      const y = e.offsetY;
+      const p = points[points.length - 1];
+      p.push({ x, y });
+      ctx.lineJoin = "round";
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = erasing ? "white" : "black";
+      ctx.lineTo(x, y);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+    }
+
+    document.getElementById("penBtn").addEventListener("click", () => {
+      erasing = false;
+      ctx.beginPath();
+    });
+
+    document.getElementById("eraserBtn").addEventListener("click", () => {
+      erasing = true;
+      ctx.beginPath();
+    });
+
+    document.getElementById("sendBtn").addEventListener("click", () => {
+      const sideLength = parseFloat(document.getElementById("sideInput").value);
+      if (!sideLength || points.length === 0) {
+        alert("Veuillez entrer un côté et dessiner un parcours.");
+        return;
+      }
+      const pathData = points.map(path => path.map(p => ({
+        x: Math.round(p.x / canvas.width * sideLength),
+        y: Math.round(p.y / canvas.height * sideLength)
+      })));
+      const flagStart = {
+        x: Math.round(parseInt(flag.style.left) / canvas.offsetWidth * sideLength),
+        y: Math.round(parseInt(flag.style.top) / canvas.offsetHeight * sideLength)
+      };
+      console.log("Trajet à envoyer:", pathData, "Départ:", flagStart);
+    });
+
+    document.getElementById("backBtn").addEventListener("click", () => {
+      window.location.href = "controller.html";
+    });
+
+    function disconnect() {
+      localStorage.clear();
+      window.location.href = "index.html";
+    }
+
+    let isDragging = false;
+    flag.addEventListener("mousedown", (e) => {
+      isDragging = true;
+      e.preventDefault();
+    });
+
+    document.addEventListener("mousemove", (e) => {
+      if (!isDragging) return;
+      const rect = canvas.getBoundingClientRect();
+      let x = e.clientX - rect.left - 15;
+      let y = e.clientY - rect.top - 15;
+      x = Math.max(0, Math.min(canvas.offsetWidth - 30, x));
+      y = Math.max(0, Math.min(canvas.offsetHeight - 30, y));
+      flag.style.left = `${x}px`;
+      flag.style.top = `${y}px`;
+    });
+
+    document.addEventListener("mouseup", () => isDragging = false);
+    function majBatterie() {
+      fetch("/battery")
+        .then(res => res.text())
+        .then(pourcentage => {
+          document.getElementById("batteryText").innerText = `🔋 ${pourcentage}%`;
+        })
+        .catch(() => {
+          document.getElementById("batteryText").innerText = "🔋 --%";
+        });
+    }
+
+    // Mise à jour toutes les 5 secondes
+    setInterval(majBatterie, 5000);
+    majBatterie(); // premier appel
+
+  </script>
+</body>
+</html>
